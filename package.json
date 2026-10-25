@@ -6,12 +6,46 @@
   "scripts": {
     "build": "tsc && tsc -p src/renderer && node -e \"require('fs').cpSync('src/renderer/index.html','dist/renderer/index.html')\"",
     "start": "npm run build && electron .",
-    "test": "tsc && node --test dist/main/*.test.js"
+    "test": "tsc && node --test dist/main/*.test.js",
+    "dist": "npm run build && electron-builder --win nsis --x64 --publish never"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
     "electron": "^45.0.0",
+    "electron-builder": "^26.18.0",
     "typescript": "^7.0.2"
   },
-  "private": true
+  "private": true,
+  "dependencies": {
+    "electron-updater": "^6.8.11"
+  },
+  "author": "whgksgma365",
+  "build": {
+    "appId": "io.github.whgksgma365.pubg-unified-launcher",
+    "productName": "PUBG 통합 런처 (비공식)",
+    "artifactName": "pubg-unified-launcher-setup-${version}.${ext}",
+    "files": [
+      "dist/**/*",
+      "!dist/**/*.test.js",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "PUBG 통합 런처 (비공식)"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "CHANGE_ME_GITHUB_OWNER",
+        "repo": "pubg-unified-launcher"
+      }
+    ]
+  }
 }

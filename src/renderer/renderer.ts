@@ -1,4 +1,4 @@
-import type { AppState, LauncherApi, NoticeInfo, Phase, PlayRecord, Profile, Server } from '../shared/types';
+import type { AppState, LauncherApi, NoticeInfo, Phase, PlayRecord, Profile, Server, UpdateState } from '../shared/types';
 
 const api = (window as unknown as { launcher: LauncherApi }).launcher;
 const $ = <T extends HTMLElement>(sel: string) => document.querySelector(sel) as T;
@@ -51,6 +51,19 @@ function renderRecord(r: PlayRecord): (Node | string)[] {
   ];
 }
 
+function renderUpdate(u: UpdateState): (Node | string)[] {
+  switch (u.status) {
+    case 'dev': return ['개발 실행 (업데이트 확인 안 함)'];
+    case 'checking': return ['업데이트 확인 중…'];
+    case 'none': return ['최신 버전입니다'];
+    case 'available': return [`새 버전 ${u.version} · `, linkButton('다운로드', () => api.downloadUpdate())];
+    case 'downloading': return [`새 버전 내려받는 중… ${u.percent ?? 0}%`];
+    case 'ready': return [`새 버전 ${u.version} 준비됨 · `, linkButton('설치', () => api.installUpdate())];
+    case 'error': return ['업데이트 정보를 가져올 수 없음 · ', linkButton('다시 확인', () => api.checkUpdate())];
+    default: return [linkButton('업데이트 확인', () => api.checkUpdate())];
+  }
+}
+
 function render(s: AppState): void {
   document.querySelectorAll<HTMLButtonElement>('[data-server]').forEach((b) =>
     b.setAttribute('aria-selected', String(b.dataset.server === s.server)),
@@ -70,13 +83,20 @@ function render(s: AppState): void {
   // 점검 정보가 틀릴 수 있으므로 안내만 하고 시작 버튼은 막지 않는다.
   $('#maint').textContent = notice.maintenance ? '점검 공지가 있습니다. 접속이 안 될 수 있어요.' : '';
 
-  $('#start').toggleAttribute('disabled', s.server === 'steam' && !s.steamPath);
+  // 클라이언트 실행 대기 중이거나 게임이 떠 있으면 탭을 바꿔도 다시 실행할 수 없다(main에서도 한 번 더 막는다).
+  const busy = s.phase === 'client' || s.phase === 'game';
+  $('#start').toggleAttribute('disabled', busy || (s.server === 'steam' && !s.steamPath));
+  $('#start').textContent = s.phase === 'client' ? '실행 중…' : s.phase === 'game' ? '게임 실행 중' : '게임 시작';
   const status = $('#status');
   status.dataset.phase = s.phase;
   status.querySelector('.label')!.textContent = s.phase === 'idle' && !s.message ? '' : LABELS[s.phase];
   status.querySelector('.msg')!.textContent = s.message;
 
   $('#records').replaceChildren(...renderRecord(s.records[s.server]));
+  $('#tools').replaceChildren(
+    `v${s.version} · `, ...renderUpdate(s.update), ' · ',
+    linkButton('바탕화면 바로가기 만들기', async () => render(await api.createShortcuts())),
+  );
 }
 
 // --- 실행 옵션 창 ---
@@ -108,6 +128,9 @@ $('#optsForm').onsubmit = async (e) => {
 document.querySelectorAll<HTMLButtonElement>('[data-server]').forEach((b) => {
   b.onclick = async () => render(await api.selectServer(b.dataset.server as Server));
 });
-$('#start').onclick = async () => render(await api.launch());
+$('#start').onclick = async () => {
+  $('#start').toggleAttribute('disabled', true); // 응답 전 연타 방지
+  render(await api.launch());
+};
 api.onState(render);
 render(await api.getState());

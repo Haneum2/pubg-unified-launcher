@@ -11,6 +11,10 @@ const api: LauncherApi = {
   pickProgram: () => ipcRenderer.invoke('pickProgram'),
   resetRecords: () => ipcRenderer.invoke('resetRecords'),
   openLink: (url) => ipcRenderer.invoke('openLink', url),
+  createShortcuts: () => ipcRenderer.invoke('createShortcuts'),
+  checkUpdate: () => ipcRenderer.invoke('checkUpdate'),
+  downloadUpdate: () => ipcRenderer.invoke('downloadUpdate'),
+  installUpdate: () => ipcRenderer.invoke('installUpdate'),
   onState: (cb) => ipcRenderer.on('state', (_e, s) => cb(s)),
 };
 

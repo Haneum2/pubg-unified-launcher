@@ -68,6 +68,13 @@ export interface PlayRecord {
 }
 export type PlayRecords = Record<Server, PlayRecord>;
 
+export interface UpdateState {
+  /** dev: 개발 실행이라 확인 불가 */
+  status: 'dev' | 'idle' | 'checking' | 'none' | 'available' | 'downloading' | 'ready' | 'error';
+  version?: string;
+  percent?: number;
+}
+
 export type Phase = 'idle' | 'client' | 'web' | 'game' | 'failed';
 
 export interface AppState {
@@ -80,6 +87,8 @@ export interface AppState {
   message: string;
   notices: Record<Server, NoticeInfo>;
   records: PlayRecords;
+  version: string;
+  update: UpdateState;
 }
 
 export interface LauncherApi {
@@ -92,5 +101,9 @@ export interface LauncherApi {
   pickProgram(): Promise<string | null>;
   resetRecords(): Promise<AppState>;
   openLink(url: string): Promise<void>;
+  createShortcuts(): Promise<AppState>;
+  checkUpdate(): Promise<void>;
+  downloadUpdate(): Promise<void>;
+  installUpdate(): Promise<void>;
   onState(cb: (s: AppState) => void): void;
 }

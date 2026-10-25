@@ -45,17 +45,58 @@ export function writeJson(file: string, data: unknown): void {
   fs.renameSync(file + '.tmp', file);
 }
 
-/** 파일이 없거나 깨졌으면 기본값. 일부 항목만 있어도 나머지는 기본값으로 채운다. */
+/**
+ * 파일은 있는데 JSON으로 읽을 수 없으면(손상) 원본을 file.broken으로 옮기고 기본값으로 다시 쓴다.
+ * 복구했으면 true.
+ */
+export function recoverJson(file: string, defaults: unknown): boolean {
+  let text: string;
+  try {
+    text = fs.readFileSync(file, 'utf8');
+  } catch {
+    return false; // 파일 없음: 첫 실행
+  }
+  try {
+    const v = JSON.parse(text);
+    if (v && typeof v === 'object') return false;
+  } catch {
+    // 손상
+  }
+  try {
+    fs.renameSync(file, file + '.broken');
+    writeJson(file, defaults);
+  } catch {
+    // 쓰기도 안 되면 메모리의 기본값으로 계속 동작한다.
+  }
+  return true;
+}
+
+/** 기본값과 같은 타입인 항목만 받아들인다. 숫자는 0 이상 유한값만. */
+function pick<T extends object>(defaults: T, raw: unknown): T {
+  const out = { ...defaults };
+  if (!raw || typeof raw !== 'object') return out;
+  for (const k of Object.keys(defaults) as (keyof T)[]) {
+    const v = (raw as T)[k];
+    if (typeof v !== typeof defaults[k]) continue;
+    if (typeof v === 'number' && !(Number.isFinite(v) && v >= 0)) continue;
+    out[k] = v;
+  }
+  return out;
+}
+
+/** 파일이 없거나 깨졌으면 기본값. 일부 항목만 있거나 타입이 틀린 항목은 기본값으로 채운다. */
 export function loadSettings(file: string): Settings {
-  const raw = readJson(file) as Partial<Settings>;
-  return {
-    ...DEFAULTS,
-    ...raw,
+  const raw = readJson(file);
+  const launch = pick(DEFAULTS.launch, raw.launch);
+  if (launch.steamMethod !== 'url' && launch.steamMethod !== 'applaunch') launch.steamMethod = DEFAULTS.launch.steamMethod;
+  const s: Settings = {
     lastServer: raw.lastServer === 'kakao' ? 'kakao' : 'steam',
-    launch: { ...DEFAULTS.launch, ...raw.launch },
-    profile: { ...DEFAULTS.profile, ...raw.profile },
-    notices: { ...DEFAULTS.notices, ...raw.notices },
+    launch,
+    profile: pick(DEFAULTS.profile, raw.profile),
+    notices: pick(DEFAULTS.notices, raw.notices),
   };
+  if (typeof raw.steamPath === 'string' && raw.steamPath) s.steamPath = raw.steamPath;
+  return s;
 }
 
 export function saveSettings(file: string, s: Settings): void {

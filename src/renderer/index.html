@@ -26,6 +26,7 @@
     #status[data-phase="game"] .label { color: var(--ok); }
     #status[data-phase="failed"] .label { color: var(--err); }
     #status[data-phase="client"] .label, #status[data-phase="web"] .label { color: var(--accent); }
+    #tools { margin-bottom: 4px; }
     footer { padding: 10px; text-align: center; color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); }
     :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     dialog { width: 480px; background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 20px; }
@@ -58,7 +59,10 @@
     <div id="status" aria-live="polite"><div class="label"></div><div class="msg"></div></div>
     <div class="info" id="records" aria-label="플레이 기록"></div>
   </main>
-  <footer>비공식 프로젝트 · KRAFTON, Valve, 카카오게임즈와 관련이 없습니다.</footer>
+  <footer>
+    <div id="tools"></div>
+    <div>비공식 프로젝트 · KRAFTON, Valve, 카카오게임즈와 관련이 없습니다.</div>
+  </footer>
 
   <dialog id="opts">
     <form method="dialog" id="optsForm">

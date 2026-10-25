@@ -68,3 +68,12 @@ PRD 오픈 이슈 1(카카오 웹사이트 주소·게임 시작 방식)과 Stea
   - 두 주소 모두 카카오 PUBG 공식 홈페이지(`pubg.kakaogames.com/pubg/index.daum`) 메뉴에 링크된 것을 확인했다.
 - RSS나 API가 없고, 자동 요청(curl)은 403으로 막힌다. HTML을 긁어 오는 것은 공식 경로가 아니므로 하지 않고, "공지사항 열기", "업데이트 소식 열기" 링크만 준다.
 - 참고: 공식 홈페이지에 **"10월 26일(월) 기존 Daum게임 URL 지원 종료 안내"** 공지가 있다. 옛 주소 `pubg.game.daum.net`은 곧 동작하지 않으므로, 기본값이 이미 새 주소(`pubg.kakaogames.com`)인 것이 맞다.
+
+---
+
+# 3단계 조사 (2026-10-25): 자동 업데이트(F9)
+
+- electron-updater(electron-builder 제공)의 GitHub provider를 쓴다. 빌드 시 `package.json`의 `build.publish`로 `app-update.yml`이 설치본에 들어가고, 앱은 GitHub Release의 `latest.yml`을 읽어 새 버전을 판단한다. 문서: <https://www.electron.build/auto-update>
+- `autoDownload = false`, `autoInstallOnAppQuit = false`로 두어 사용자가 "다운로드"와 "설치"를 각각 눌러야만 진행된다.
+- **확인 필요:** 이 저장소에는 GitHub 원격이 없어 `owner`를 `CHANGE_ME_GITHUB_OWNER`로 두었다. 실제 저장소로 바꾸고 Release를 올려야 동작한다.
+- **한계:** 코드 서명을 하지 않아 electron-updater는 `latest.yml`의 sha512 해시로만 파일을 검증한다. 공개 배포라면 코드 서명 인증서를 쓰는 것이 좋다.

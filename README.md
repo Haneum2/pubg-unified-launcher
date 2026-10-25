@@ -20,7 +20,7 @@ npm run dist  # Windows 설치 파일 빌드 → releasepubg-unified-launcher-se
 `npm run dist`는 TypeScript를 빌드한 뒤 electron-builder로 NSIS 설치 파일(x64)을 만든다. 처음 빌드할 때는 Electron·NSIS를 내려받으므로 인터넷이 필요하다.
 
 - 결과물: `releasepubg-unified-launcher-setup-<버전>.exe`, 자동 업데이트용 `releaselatest.yml`, `.blockmap`.
-- 코드 서명은 하지 않는다. 그래서 설치할 때 Windows SmartScreen 경고가 뜬다. 아이콘은 지정하지 않았다(상표·로고를 쓰지 않기 위해 Electron 기본 아이콘 사용).
+- 코드 서명은 하지 않는다. 그래서 설치할 때 Windows SmartScreen 경고가 뜬다. 아이콘은 프로젝트 루트의 `icon.ico`를 쓴다(설치 파일·exe·창).
 - 설치본과 `npm start`는 같은 데이터 폴더(`%APPDATA%pubg-unified-launcher`)를 쓴다.
 
 ## 동작

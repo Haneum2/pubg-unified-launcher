@@ -45,7 +45,7 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "CHANGE_ME_GITHUB_OWNER",
+        "owner": "Haneum2",
         "repo": "pubg-unified-launcher"
       }
     ]

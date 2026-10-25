@@ -27,13 +27,15 @@
     "files": [
       "dist/**/*",
       "!dist/**/*.test.js",
-      "package.json"
+      "package.json",
+      "icon.ico"
     ],
     "directories": {
       "output": "release"
     },
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "icon.ico"
     },
     "nsis": {
       "oneClick": false,

@@ -220,6 +220,7 @@ function showWindow(): void {
     autoHideMenuBar: true,
     backgroundColor: '#15171c',
     title: 'PUBG 통합 런처 (비공식)',
+    icon: path.join(__dirname, '../../icon.ico'),
     webPreferences: { preload: path.join(__dirname, 'preload.js') },
   });
   win.on('closed', () => (win = null));

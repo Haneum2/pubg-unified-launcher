@@ -1,0 +1,17 @@
+{
+  "name": "pubg-unified-launcher",
+  "version": "1.0.0",
+  "description": "PUBG Steam/카카오 통합 실행 프로그램 (비공식)",
+  "main": "dist/main/index.js",
+  "scripts": {
+    "build": "tsc && tsc -p src/renderer && node -e \"require('fs').cpSync('src/renderer/index.html','dist/renderer/index.html')\"",
+    "start": "npm run build && electron .",
+    "test": "tsc && node --test dist/main/*.test.js"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "electron": "^45.0.0",
+    "typescript": "^7.0.2"
+  },
+  "private": true
+}

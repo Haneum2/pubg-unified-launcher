@@ -37,6 +37,26 @@ test('launch 일부만 바꿔도 나머지는 기본값으로 채운다', () => 
   assert.equal(s.lastServer, 'steam');
 });
 
+test('1단계 형식의 설정 파일도 그대로 읽고 새 항목은 기본값', () => {
+  const f = tmpFile();
+  fs.mkdirSync(path.dirname(f), { recursive: true });
+  const v1 = { lastServer: 'kakao', steamPath: 'D:\\Steam', launch: { ...DEFAULTS.launch, steamUrlWithArgs: undefined, timeoutSec: 45 } };
+  fs.writeFileSync(f, JSON.stringify(v1));
+  const s = loadSettings(f);
+  assert.equal(s.lastServer, 'kakao');
+  assert.equal(s.launch.timeoutSec, 45);
+  assert.equal(s.launch.steamUrlWithArgs, DEFAULTS.launch.steamUrlWithArgs);
+  assert.deepEqual(s.profile, DEFAULTS.profile);
+  assert.deepEqual(s.notices, DEFAULTS.notices);
+});
+
+test('JSON이 객체가 아니면(null 등) 기본값', () => {
+  const f = tmpFile();
+  fs.mkdirSync(path.dirname(f), { recursive: true });
+  fs.writeFileSync(f, 'null');
+  assert.deepEqual(loadSettings(f), DEFAULTS);
+});
+
 test('알 수 없는 서버 값은 steam으로', () => {
   const f = tmpFile();
   fs.mkdirSync(path.dirname(f), { recursive: true });

@@ -36,3 +36,35 @@ PRD 오픈 이슈 1(카카오 웹사이트 주소·게임 시작 방식)과 Stea
 ## 참고: 조사 한계
 - `curl`로 카카오 페이지를 직접 받으면 403을 반환해, 페이지 스크립트(게임 시작 버튼의 실제 동작 코드)는 확인하지 못했다.
 - Valve 개발자 위키는 조사 시점에 자동 조회를 막아(403) 검색 결과 요약으로만 확인했다.
+
+---
+
+# 2단계 조사 (2026-10-25): 실행 인자(F5), 점검·패치 정보(F6)
+
+## 3. Steam 실행 인자 전달 (F5)
+
+| 방식 | 형식 | 근거 | 상태 |
+| --- | --- | --- | --- |
+| URL (기본) | `steam://run/{appId}//{args}/` (`launch.steamUrlWithArgs`) | Valve Developer Community "Steam browser protocol" <https://developer.valvesoftware.com/wiki/Steam_browser_protocol> — `run` 계열 명령의 args는 앱 실행 인자로 전달된다고 설명. 인자가 있으면 Steam이 사용자에게 확인 창을 띄운다 | 문서 확인. 인자 인코딩(`%20`) 처리는 **실제 실행으로 확인 필요** |
+| 명령줄 | `steam.exe -applaunch {appId} {args...}` (`launch.steamMethod = "applaunch"`) | <https://developer.valvesoftware.com/wiki/Command_line_options> (403으로 본문 재확인 못 함) | **확인 필요** |
+
+- 둘 다 Steam이 공식으로 제공하는 경로다. 런처는 Steam의 "실행 옵션" 설정 파일(`localconfig.vdf`)이나 게임 파일을 고치지 않는다.
+- 인자는 영문·숫자·공백과 `- + = . , : _`만 허용한다. 따옴표, 셸 문자, 경로 구분자, 줄바꿈은 막아서 URL이나 명령줄이 다른 뜻으로 해석되지 않게 한다.
+- PUBG가 어떤 인자를 실제로 반영하는지에 대한 KRAFTON 공식 문서는 찾지 못했다. 인자 효과는 사용자가 직접 확인해야 한다.
+
+## 4. 점검·패치 정보 소스 (F6)
+
+### Steam: 공식 Web API 사용
+- `https://api.steampowered.com/ISteamNews/GetNewsForApp/v2/?appid=578080&count=50&maxlength=1&feeds=steam_community_announcements`
+  - Valve가 공개한 Steam Web API다(키 불필요). 2026-10-25 호출 시 200 OK, PUBG 공식 공지(`steam_community_announcements`)가 반환됐다.
+  - 패치 노트 제목 형식: "Patch Notes - Update 43.2" (2026-10-13). 같은 공지는 pubg.com 뉴스에도 "패치 노트 - 업데이트 43.2"로 올라온다(<https://pubg.com/ko/news>).
+- **점검 공지 한계:** 최근 200건 중 제목에 "Maintenance/점검"이 들어간 공지는 **하나도 없었다**. pubg.com 뉴스에도 점검 공지는 보이지 않았고 RSS·API도 없다. PUBG 개발자 API(<https://documentation.pubg.com/>)는 전적 데이터용이라 게임 서버 점검 상태를 주지 않는다.
+  - 그래서 런처는 "최근 48시간(`notices.maintenanceHours`) 안에 제목에 Maintenance/점검이 들어간 Steam 공지"가 있을 때만 점검 안내를 보여 준다. 점검 시각은 본문 자유 텍스트라 읽지 않는다. 안내만 할 뿐 시작 버튼은 막지 않는다.
+  - 공지 원문 확인용으로 Steam 공지 페이지 <https://store.steampowered.com/news/app/578080> 링크를 함께 준다.
+
+### 카카오: 공식 데이터 경로 없음 → 링크로 대체
+- 공지 게시판: `https://bbs-pubg.kakaogames.com/gaia/do/pubg/notice/list?bbsId=PN001`
+- 업데이트 게시판: `https://bbs-pubg.kakaogames.com/gaia/do/pubg/update/list?bbsId=PN002&objCate1=255`
+  - 두 주소 모두 카카오 PUBG 공식 홈페이지(`pubg.kakaogames.com/pubg/index.daum`) 메뉴에 링크된 것을 확인했다.
+- RSS나 API가 없고, 자동 요청(curl)은 403으로 막힌다. HTML을 긁어 오는 것은 공식 경로가 아니므로 하지 않고, "공지사항 열기", "업데이트 소식 열기" 링크만 준다.
+- 참고: 공식 홈페이지에 **"10월 26일(월) 기존 Daum게임 URL 지원 종료 안내"** 공지가 있다. 옛 주소 `pubg.game.daum.net`은 곧 동작하지 않으므로, 기본값이 이미 새 주소(`pubg.kakaogames.com`)인 것이 맞다.

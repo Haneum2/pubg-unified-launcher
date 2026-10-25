@@ -11,12 +11,16 @@
     .tabs { display: flex; border-bottom: 1px solid var(--line); }
     .tabs button { flex: 1; padding: 14px; background: none; border: 0; border-bottom: 2px solid transparent; color: var(--muted); font: inherit; font-weight: 600; cursor: pointer; }
     .tabs button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); }
-    main { flex: 1; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
-    .info { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; color: var(--muted); font-size: 13px; }
+    .tabs #optsBtn { flex: 0 0 auto; font-weight: 400; font-size: 13px; }
+    main { flex: 1; padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
+    .info { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; color: var(--muted); font-size: 13px; }
     .info b { color: var(--text); font-weight: 600; }
-    .link { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; cursor: pointer; text-decoration: underline; }
-    #start { padding: 14px; border: 0; border-radius: 8px; background: var(--accent); color: #111; font: inherit; font-size: 16px; font-weight: 700; cursor: pointer; }
+    .info .row + .row { margin-top: 4px; }
+    .link { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; cursor: pointer; text-decoration: underline; text-align: left; }
+    .startRow { display: flex; gap: 12px; align-items: center; }
+    #start { flex: 0 0 auto; padding: 14px 40px; border: 0; border-radius: 8px; background: var(--accent); color: #111; font: inherit; font-size: 16px; font-weight: 700; cursor: pointer; }
     #start:disabled { opacity: .5; cursor: default; }
+    #maint { color: var(--accent); font-size: 13px; }
     #status { min-height: 42px; }
     #status .label { font-weight: 700; }
     #status[data-phase="game"] .label { color: var(--ok); }
@@ -24,19 +28,57 @@
     #status[data-phase="client"] .label, #status[data-phase="web"] .label { color: var(--accent); }
     footer { padding: 10px; text-align: center; color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); }
     :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    dialog { width: 480px; background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 20px; }
+    dialog::backdrop { background: rgb(0 0 0 / .6); }
+    dialog h2 { margin: 0 0 12px; font-size: 16px; }
+    dialog label { display: block; margin-top: 12px; font-size: 13px; color: var(--muted); }
+    dialog .field { display: flex; gap: 6px; margin-top: 4px; }
+    dialog input { flex: 1; min-width: 0; padding: 8px 10px; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 6px; font: inherit; }
+    dialog small { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; }
+    dialog .btn { padding: 8px 14px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--text); font: inherit; cursor: pointer; }
+    dialog .btn.primary { background: var(--accent); border-color: var(--accent); color: #111; font-weight: 700; }
+    dialog .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+    #optsErrors { color: var(--err); font-size: 13px; margin: 12px 0 0; padding-left: 18px; }
+    #optsErrors:empty { display: none; }
   </style>
 </head>
 <body>
   <nav class="tabs" role="tablist">
     <button role="tab" data-server="steam" aria-selected="false">Steam</button>
     <button role="tab" data-server="kakao" aria-selected="false">카카오</button>
+    <button id="optsBtn">실행 옵션</button>
   </nav>
   <main>
     <div class="info" id="info"></div>
-    <button id="start">게임 시작</button>
+    <div class="info" id="notice" aria-label="점검·패치 정보"></div>
+    <div class="startRow">
+      <button id="start">게임 시작</button>
+      <span id="maint"></span>
+    </div>
     <div id="status" aria-live="polite"><div class="label"></div><div class="msg"></div></div>
+    <div class="info" id="records" aria-label="플레이 기록"></div>
   </main>
   <footer>비공식 프로젝트 · KRAFTON, Valve, 카카오게임즈와 관련이 없습니다.</footer>
+
+  <dialog id="opts">
+    <form method="dialog" id="optsForm">
+      <h2>실행 옵션</h2>
+      <label for="steamArgs">Steam 실행 인자 (선택)</label>
+      <div class="field"><input id="steamArgs" placeholder="예: -USEALLAVAILABLECORES"></div>
+      <small>Steam을 통해서만 게임에 전달됩니다. Steam이 확인 창을 띄울 수 있습니다.</small>
+      <label for="kakaoUrl">카카오 접속 주소</label>
+      <div class="field"><input id="kakaoUrl" required></div>
+      <label for="beforeProgram">실행 전 프로그램 (선택) — 게임 시작을 누를 때 함께 실행</label>
+      <div class="field"><input id="beforeProgram" placeholder="C:\...\program.exe"><button type="button" class="btn" data-pick="beforeProgram">찾아보기</button></div>
+      <label for="afterProgram">실행 후 프로그램 (선택) — 게임이 종료되면 실행</label>
+      <div class="field"><input id="afterProgram" placeholder="C:\...\program.exe"><button type="button" class="btn" data-pick="afterProgram">찾아보기</button></div>
+      <ul id="optsErrors" role="alert"></ul>
+      <div class="actions">
+        <button type="button" class="btn" id="optsCancel">닫기</button>
+        <button type="submit" class="btn primary">저장</button>
+      </div>
+    </form>
+  </dialog>
   <script type="module" src="renderer.js"></script>
 </body>
 </html>
